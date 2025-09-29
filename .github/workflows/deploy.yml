@@ -2,35 +2,36 @@ name: Deploy MkDocs to GitHub Pages
 on:
   push:
     branches:
-      - main  # 仅在main分支推送时触发
+      - main  # 仅在main分支推送代码时触发工作流
     paths:
-      - 'docs/**'  # docs目录变化时触发
-      - 'mkdocs.yml'  # 配置文件变化时触发
+      - 'docs/**'  # 当docs目录下的文件有变化时触发
+      - 'mkdocs.yml'  # 当配置文件mkdocs.yml有变化时触发
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 运行工作流的环境是最新版的Ubuntu系统
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # 使用官方的检出动作，拉取仓库代码
         with:
-          token: ${{ secrets.PAT }}  # 使用个人访问令牌拉取代码
+          token: ${{ secrets.PAT }}  # 用之前配置的PAT令牌拉取代码，确保权限足够
       - name: 设置Python环境
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4  # 配置Python环境的动作
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # 指定使用Python 3.9版本
       - name: 安装MkDocs及依赖
         run: |
-          pip install mkdocs
-          pip install mkdocs-material
+          pip install mkdocs  # 安装MkDocs核心工具
+          pip install mkdocs-material  # 安装MkDocs的Material主题
       - name: 构建静态文档
         run: |
-          mkdocs build  # 生成的静态文件存放在site目录
-          if [ $? -ne 0 ]; then
+          mkdocs build  # 执行MkDocs构建命令，生成的静态文件会放在site目录
+          if [ $? -ne 0 ]; then  # 检查上一条命令（mkdocs build）的退出状态，非0表示失败
             echo "MkDocs 构建失败"
-            exit 1
+            exit 1  # 让工作流以失败状态退出
           fi
       - name: 部署到GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@v4  # 使用第三方部署动作
         with:
-          branch: gh-pages  # 部署目标分支
-          folder: site      # 待部署的文件目录
+          branch: gh-pages  # 要把静态文档部署到gh-pages分支
+          folder: site      # 指定要部署的文件来自site目录（MkDocs构建生成的目录）
+          token: ${{ secrets.PAT }}  # 提供部署所需的PAT令牌，让动作能推送到gh-pages分支
